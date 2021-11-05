@@ -26,9 +26,6 @@ extension LHSField {
         return ComputationObject(lhs: self, rhs: rhs)
     }
 }
-public enum Field: FieldProtocol {
-    case pressure, distance
-}
 
 @inlinable
 public func ==<LHS: LHSField, RHS: RHSField>(lhs: LHS, rhs: RHS) -> ComputationObject<LHS, RHS> {

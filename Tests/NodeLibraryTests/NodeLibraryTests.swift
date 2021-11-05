@@ -7,5 +7,6 @@ final class NodeLibraryTests: XCTestCase {
         // Use XCTAssert and related functions to verify your tests produce the correct
         // results.
         XCTAssertEqual(NodeLibrary().text, "Hello, World!")
+        XCTAssertEqual(NodeLibrary().testIsTrue, true)
     }
 }
