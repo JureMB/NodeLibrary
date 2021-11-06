@@ -98,3 +98,20 @@ extension ScalarFieldRHS {
             return explicitOperatorField(clousure())
     }
 }
+
+extension ScalarField {
+    public func explicitOperatorField(_ op: DifferentialOperator<DefaultOp>) async ->OperatorField<E,S, F> {
+        return OperatorField(op: op, fieldRHS: await copy())
+    }
+    
+    public func explicitOperatorField(_ clousure: ()->DifferentialOperator<DefaultOp> ) async ->OperatorField<E,S, F> {
+        return await explicitOperatorField(clousure())
+    }
+    public func callAsFunction(_ op: DifferentialOperator<DefaultOp>) async  -> OperatorField<E,S, F> {
+        return await explicitOperatorField(op)
+    }
+    
+    public func callAsFunction(_ clousure: ()->DifferentialOperator<DefaultOp>) async -> OperatorField<E,S, F> {
+        return await explicitOperatorField(clousure())
+    }
+}

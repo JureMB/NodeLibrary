@@ -160,26 +160,28 @@ extension Solver {
     public func explicitSolve<LHS, RHS>
     (on nodes: Nodes,
      @EquationBuilder
-     expression: () -> ComputationObject<LHS, RHS>) async
+     expression: () async -> ComputationObject<LHS, RHS>) async
     where E: GroupProtocol, LHS: Explicit&LHSFieldExplicit {
-        await ExplicitEquation(forNodesIn: getNodes(nodes: nodes), expression: expression).applyParallel()
+        let result = await expression()
+        await ExplicitEquation(forNodesIn: getNodes(nodes: nodes), expression: { result }).applyParallel()
     }
     @inlinable
     public func explicitSolve<LHS, RHS>
     (on nodes: NodesNoGroups,
      @EquationBuilder
-     expression: () -> ComputationObject<LHS, RHS>) async
+     expression: () async -> ComputationObject<LHS, RHS>) async
     where E == NoGroups, LHS: Explicit&LHSFieldExplicit {
         let nodesBase = nodesNoGrupsToNodes(nodesNoGroups: nodes)
-        await ExplicitEquation(forNodesIn: getNodes(nodes: nodesBase), expression: expression).applyParallel()
+        let result = await expression()
+        await ExplicitEquation(forNodesIn: getNodes(nodes: nodesBase), expression: { result }).applyParallel()
     }
     @inlinable
     public func explicitSolve<LHS1, LHS2, RHS1, RHS2>
     (on nodes: Nodes,
      @EquationBuilder
-     expression: () -> (ComputationObject<LHS1,RHS1>, ComputationObject<LHS2, RHS2>) ) async
+     expression: () async -> (ComputationObject<LHS1,RHS1>, ComputationObject<LHS2, RHS2>) ) async
     where LHS1: Explicit&LHSFieldExplicit, LHS2: Explicit&LHSFieldExplicit, E: GroupProtocol{
-        let tuple = expression()
+        let tuple = await expression()
         let equations = ExplicitEquations2(
             first:   ExplicitEquation(forNodesIn: getNodes(nodes: nodes), expression: { tuple.0 }),
             seccond: ExplicitEquation(forNodesIn: getNodes(nodes: nodes), expression: { tuple.1 }))
@@ -189,9 +191,9 @@ extension Solver {
     public func explicitSolve<LHS1, LHS2, RHS1, RHS2>
     (on nodes: NodesNoGroups,
      @EquationBuilder
-     expression: () -> (ComputationObject<LHS1,RHS1>, ComputationObject<LHS2, RHS2>) ) async
+     expression: () async -> (ComputationObject<LHS1,RHS1>, ComputationObject<LHS2, RHS2>) ) async
     where LHS1: Explicit&LHSFieldExplicit, LHS2: Explicit&LHSFieldExplicit, E == NoGroups{
-        let tuple = expression()
+        let tuple = await expression()
         let nodesBase = nodesNoGrupsToNodes(nodesNoGroups: nodes)
         let equations = ExplicitEquations2(
             first:   ExplicitEquation(forNodesIn: getNodes(nodes: nodesBase), expression: { tuple.0 }),
@@ -202,9 +204,9 @@ extension Solver {
     public func explicitSolve<LHS1, LHS2, LHS3 ,RHS1, RHS2, RHS3>
     (on nodes: NodesNoGroups,
      @EquationBuilder
-     expression: () -> (ComputationObject<LHS1,RHS1>, ComputationObject<LHS2, RHS2>, ComputationObject<LHS3, RHS3>) ) async
+     expression: () async -> (ComputationObject<LHS1,RHS1>, ComputationObject<LHS2, RHS2>, ComputationObject<LHS3, RHS3>) ) async
     where LHS1: Explicit&LHSFieldExplicit, LHS2: Explicit&LHSFieldExplicit, LHS3: Explicit&LHSFieldExplicit ,E == NoGroups{
-        let tuple = expression()
+        let tuple = await expression()
         let nodesBase = nodesNoGrupsToNodes(nodesNoGroups: nodes)
         let equations = ExplicitEquations3(
             first:   ExplicitEquation(forNodesIn: getNodes(nodes: nodesBase), expression: { tuple.0 }),
@@ -216,9 +218,9 @@ extension Solver {
     public func explicitSolve<LHS1, LHS2, LHS3, LHS4 ,RHS1, RHS2, RHS3, RHS4>
     (on nodes: NodesNoGroups,
      @EquationBuilder
-     expression: () -> (ComputationObject<LHS1,RHS1>, ComputationObject<LHS2, RHS2>, ComputationObject<LHS3, RHS3>, ComputationObject<LHS4, RHS4>) ) async
+     expression: () async -> (ComputationObject<LHS1,RHS1>, ComputationObject<LHS2, RHS2>, ComputationObject<LHS3, RHS3>, ComputationObject<LHS4, RHS4>) ) async
     where LHS1: Explicit&LHSFieldExplicit, LHS2: Explicit&LHSFieldExplicit, LHS3: Explicit&LHSFieldExplicit, LHS4: Explicit&LHSFieldExplicit, E == NoGroups{
-        let tuple = expression()
+        let tuple = await expression()
         let nodesBase = nodesNoGrupsToNodes(nodesNoGroups: nodes)
         let equations = ExplicitEquations4(
             first:   ExplicitEquation(forNodesIn: getNodes(nodes: nodesBase), expression: { tuple.0 }),
