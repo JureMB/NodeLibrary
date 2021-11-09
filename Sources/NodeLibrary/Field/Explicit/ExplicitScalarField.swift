@@ -10,7 +10,7 @@ public final class ScalarField<E:BaseGroupProtocol, S: BaseDomainShape, F: Field
     private let coefPointer: UnsafeMutableBufferPointer<[Vec<Double>]>
     public var _data: DataActor
     private let _domain: Domain<E,S>
-    internal let _solver: Solver<E, S, F>
+    fileprivate let _solver: Solver<E, S, F>
     
     let fieldID: F
     private let fieldIndex: Int
@@ -98,7 +98,6 @@ extension ScalarFieldRHS {
             return explicitOperatorField(clousure())
     }
 }
-
 extension ScalarField {
     public func explicitOperatorField(_ op: DifferentialOperator<DefaultOp>) async ->OperatorField<E,S, F> {
         return OperatorField(op: op, fieldRHS: await copy())
@@ -115,3 +114,58 @@ extension ScalarField {
         return await explicitOperatorField(clousure())
     }
 }
+
+public struct OperatorField<E: BaseGroupProtocol, S: BaseDomainShape, F: FieldProtocol>: RHSField, Explicit {
+    let op: DifferentialOperator<DefaultOp>
+    private let opInddex: Int
+    private let field: ScalarField<E,S,F>
+    private let fieldRHS: ScalarFieldRHS<E,S,F>
+    fileprivate init (op: DifferentialOperator<DefaultOp>, fieldRHS: ScalarFieldRHS<E,S,F>) {
+        var tempIndex: Int?
+        self.op = op
+        self.fieldRHS = fieldRHS
+        self.field = fieldRHS.field
+        // get index from dictionary
+        tempIndex = field._solver._OpIndices_new[op]
+        
+        if tempIndex == nil {
+            opInddex = field._solver.addOperatorReturningIndex(op )
+            setCoefs()
+        } else {
+            opInddex = tempIndex!
+        }
+    }
+    
+    public subscript(index: Int) -> Double {
+        return fieldRHS.apply(opIndex: opInddex, atIndex: index)
+    }
+    
+    func setCoefs() {
+        for node in field._solver.all {
+            setCoefs(at: node.index)
+        }
+    }
+    
+    func setCoefs(at index: Int) {
+        fieldRHS.setCoefs(opIndex: opInddex, op: op, atIndex: index)
+    }
+    
+    public func getData() async -> [Double] {
+        return await field.getData()
+    }
+}
+
+public struct AddedExplicitField<RHS1,RHS2>: RHSField where RHS1: RHSField, RHS2: RHSField {
+    public let opField1: RHS1
+    public let opField2: RHS2
+    @inlinable
+    public subscript(index: Int) -> Double {
+        return opField1[index] + opField2[index]
+    }
+}
+
+public func +<RHS1,RHS2>(lhs: RHS1, rhs: RHS2 ) -> AddedExplicitField<RHS1,RHS2>
+where RHS1: RHSField, RHS2: RHSField {
+    return AddedExplicitField(opField1: lhs, opField2: rhs)
+}
+
