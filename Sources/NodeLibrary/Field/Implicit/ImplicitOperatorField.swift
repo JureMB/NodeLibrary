@@ -4,7 +4,8 @@
 //
 //  Created by Jure Mocnik Berljavac on 06/11/2021.
 //
-public final class ImplicitOperatorField<E: BaseGroupProtocol, S: BaseDomainShape, F: FieldProtocol>: LHSFieldImplicit {
+public final class ImplicitOperatorField<E,S,F>: LHSFieldImplicit
+where E: BaseGroupProtocol, S: BaseDomainShape, F: FieldProtocol{
 
     func update(clousure: @Sendable (inout [Double]) -> Void) async {
         fatalError()
@@ -33,11 +34,11 @@ public final class ImplicitOperatorField<E: BaseGroupProtocol, S: BaseDomainShap
 }
 
 extension ImplicitOperatorField: Implicit {
-    public func allowOneOverwriteOfMatrixRows(forNodeArray nodeRange: [(index: Int, kind: NodeKind, group: E?, point: Point)]) {
+    public func allowOneOverwriteOfMatrixRows(forNodeArray nodeRange: NodeArray<E>) {
         field.allowOneOverwriteOfMatrixRows(forNodeArray: nodeRange)
     }
     
-    public func allowOneOverwriteOfRhsRows(forNodeArray nodeRange: [(index: Int, kind: NodeKind, group: E?, point: Point)]) {
+    public func allowOneOverwriteOfRhsRows(forNodeArray nodeRange: NodeArray<E>) {
         field.allowOneOverwriteOfRhsRows(forNodeArray: nodeRange)
     }
     

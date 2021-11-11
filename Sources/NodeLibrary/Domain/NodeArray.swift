@@ -16,11 +16,11 @@ protocol NodeDataProtocol {
 }
 
 public struct NodeData<GroupType>: NodeDataProtocol where GroupType: BaseGroupProtocol {
-    let index: Int
-    let id: UUID
-    var kind: NodeKind
-    var coord: Point
-    var group: GroupType?
+    public let index: Int
+    public let id: UUID
+    public var kind: NodeKind
+    public var coord: Point
+    public var group: GroupType?
     
     init(index: Int, node: Node<GroupType>) {
         self.index = index

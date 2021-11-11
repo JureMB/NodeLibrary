@@ -9,7 +9,7 @@ import Foundation
 public protocol FieldProtocol: CaseIterable, Hashable {}
 
 public final class Solver<E, S, F> where E:BaseGroupProtocol, S: BaseDomainShape, F: FieldProtocol {
-    public enum Nodes {
+    public enum NodesWithGroups {
         case interior
         case boundary
         case all
@@ -29,80 +29,74 @@ public final class Solver<E, S, F> where E:BaseGroupProtocol, S: BaseDomainShape
     private unowned var _domain: Domain<E, S>
     private var _fieldsDictionary = [F: Int]()
     private var _operatorCoefs: [[Vec<Double>]] //[indexNode][indexOP]
-    private let coefsPointer: UnsafeMutableBufferPointer<[Vec<Double>]>
+    private let _coefsPointer: UnsafeMutableBufferPointer<[Vec<Double>]>
     
-    let interior: NodeArray<E>
-    let boundary: NodeArray<E>
-    let all: NodeArray<E>
-    var groups: [E : NodeArray<E>] = [:]
+    internal let _interior: NodeArray<E>
+    internal let _boundary: NodeArray<E>
+    internal let _all: NodeArray<E>
+    internal var _groups: [E : NodeArray<E>] = [:]
     
-    internal var _OpIndices: [UUID: Int] = [:] // not ideal
-    internal var _OpIndices_new: [DifferentialOperator<DefaultOp>: Int] = [DifferentialOperator(.der1(.x)): 0, DifferentialOperator(.der1(.y)): 1,
-                                                         DifferentialOperator(.der2(.x)): 2, DifferentialOperator(.der2(.y)): 3, DifferentialOperator(.lap): 4] // not ideal
-    // pointer for performance reasons
+    internal var _OpIndices_new: [DifferentialOperator<DefaultOp>: Int] =
+    [DifferentialOperator(.der1(.x)): 0, DifferentialOperator(.der1(.y)): 1,
+     DifferentialOperator(.der2(.x)): 2, DifferentialOperator(.der2(.y)): 3,
+     DifferentialOperator(.lap): 4] // not ideal
     internal var nodeCount: Int { _domain.count }
     
     internal init(domain: Domain<E, S>, scalarFields: F.Type? , vectorFields: Fields2D.Type?) {
-        _domain = domain
-        _scalarFieldsType = scalarFields
-        _vectorFieldsType = vectorFields
-        _operatorCoefs = Array(repeating: [Vec<Double>](repeating: Vec(_data: []), count: 10), count: _domain.count)
-        coefsPointer = _operatorCoefs.withUnsafeMutableBufferPointer {$0}
+        self._domain = domain
+        self._scalarFieldsType = scalarFields
+        self._vectorFieldsType = vectorFields
+        self._operatorCoefs = Array(repeating: [Vec<Double>](repeating: Vec(_data: []), count: 10), count: _domain.count)
+        self._coefsPointer = _operatorCoefs.withUnsafeMutableBufferPointer {$0}
         
-        interior = _domain.interior().toArray()
-        boundary = _domain.boundary().toArray()
-        all = interior + boundary
+        self._interior = _domain.interior().toArray()
+        self._boundary = _domain.boundary().toArray()
+        self._all = _interior + _boundary
         for (index, field) in _scalarFieldsType!.allCases.enumerated() {
-            _fieldsDictionary[field] = index
-            _fields.append(ScalarField(id: field, size: domain.count, solver: self, domain: domain, coefsPointer: coefsPointer))
+            self._fieldsDictionary[field] = index
+            self._fields.append(ScalarField(id: field, size: domain.count, solver: self, domain: domain, coefsPointer: _coefsPointer))
         }
-        let derx = DifferentialOperator(.der1(.x))
-        let dery = DifferentialOperator(.der1(.y))
+        let derx  = DifferentialOperator(.der1(.x))
+        let dery  = DifferentialOperator(.der1(.y))
         let derxx = DifferentialOperator(.der2(.x))
         let deryy = DifferentialOperator(.der2(.y))
-        let lap = DifferentialOperator(.lap)
+        let lap   = DifferentialOperator(.lap)
         
-        for node in all {
+        for node in _all {
             let i = node.index
-            _operatorCoefs[i][0] = derx.getCoefs(atIndex: i, from: _domain)
-            _operatorCoefs[i][1] = dery.getCoefs(atIndex: i, from: _domain)
-            _operatorCoefs[i][2] = derxx.getCoefs(atIndex: i, from: _domain)
-            _operatorCoefs[i][3] = deryy.getCoefs(atIndex: i, from: _domain)
-            _operatorCoefs[i][4] = lap.getCoefs(atIndex: i, from: _domain)
+            self._operatorCoefs[i][0] = derx.getCoefs( atIndex: i, from: _domain)
+            self._operatorCoefs[i][1] = dery.getCoefs( atIndex: i, from: _domain)
+            self._operatorCoefs[i][2] = derxx.getCoefs(atIndex: i, from: _domain)
+            self._operatorCoefs[i][3] = deryy.getCoefs(atIndex: i, from: _domain)
+            self._operatorCoefs[i][4] = lap.getCoefs(  atIndex: i, from: _domain)
         }
     }
+    
     convenience init (domain: Domain<E, S>, scalarFields: F.Type?) where E: GroupProtocol { // FIX
         self.init(domain: domain, scalarFields: scalarFields, vectorFields: nil)
         for group in E.allCases {
-            groups[group] = _domain.group(group).toArray()
+            _groups[group] = _domain.group(group).toArray()
         }
     }
+    
     internal func getFieldIndex(for field: F) -> Int {
         return _fieldsDictionary[field]!
     }
+    
     public func explicitField(_ fieldID: F) -> ScalarField<E,S,F> {
         let index = _fieldsDictionary[fieldID]!
         return _fields[index]
     }
+    
     public func implicitField(_ fieldID: F) -> ImplicitScalarField<E,S,F> {
         return .init(fieldID, solver: self)
     }
-    internal func addOperatorReturningIndex(withID id: UUID) -> Int  {
-        assert(!_OpIndices.keys.contains(id))
-        guard(_OpIndex < 20) else {fatalError("Operator explosion. Do not define OperatorFields inside loops. ")}
-        let currentIndex = _OpIndex
-        _OpIndices[id] = currentIndex
-        _OpIndex += 1
-        if _operatorCoefs[0].count <= currentIndex {
-            for i in 0..<_operatorCoefs.count {
-                _operatorCoefs[i].append(Vec(_data: []))
-            }
-        }
-        return currentIndex
-    }
+    
     internal func addOperatorReturningIndex(_ op: DifferentialOperator<DefaultOp>) -> Int  {
         assert(!_OpIndices_new.keys.contains(op))
-        guard(_OpIndex < 20) else {fatalError("Operator explosion. Do not define OperatorFields inside loops. ")}
+        guard(_OpIndex < 20) else {
+            fatalError("Operator explosion. Do not define OperatorFields inside loops. ")
+        }
         let currentIndex = _OpIndex
         _OpIndices_new[op] = currentIndex
         _OpIndex += 1
@@ -116,7 +110,7 @@ public final class Solver<E, S, F> where E:BaseGroupProtocol, S: BaseDomainShape
 }
 // Internal node indices manegement
 extension Solver {
-    public func nodesNoGrupsToNodes(nodesNoGroups: NodesNoGroups) -> Nodes {
+    public func nodesNoGrupsToNodes(nodesNoGroups: NodesNoGroups) -> NodesWithGroups {
         switch nodesNoGroups {
         case .interior:
             return .interior
@@ -127,27 +121,27 @@ extension Solver {
         }
     }
     
-    public func getNodes(nodes: Nodes) -> NodeArray<E> {
+    public func getNodes(nodes: NodesWithGroups) -> NodeArray<E> {
         switch nodes {
         case .interior:
-            return interior
+            return _interior
         case .boundary:
-            return boundary
+            return _boundary
         case .all:
-            return all
+            return _all
         case .group(let group):
-            return groups[group]!
+            return _groups[group]!
         }
     }
     
-    public func getNodes(nodes: Nodes) -> NodeArray<E> where E == NoGroups {
+    public func getNodes(nodes: NodesWithGroups) -> NodeArray<E> where E == NoGroups {
         switch nodes {
         case .interior:
-            return interior
+            return _interior
         case .boundary:
-            return boundary
+            return _boundary
         case .all:
-            return all
+            return _all
         case .group:
             fatalError("Groups not defined.")
         }
@@ -158,7 +152,7 @@ extension Solver {
 extension Solver {
     @inlinable
     public func explicitSolve<LHS, RHS>
-    (on nodes: Nodes,
+    (on nodes: NodesWithGroups,
      @EquationBuilder
      expression: () async -> ComputationObject<LHS, RHS>) async
     where E: GroupProtocol, LHS: Explicit&LHSFieldExplicit {
@@ -177,7 +171,7 @@ extension Solver {
     }
     @inlinable
     public func explicitSolve<LHS1, LHS2, RHS1, RHS2>
-    (on nodes: Nodes,
+    (on nodes: NodesWithGroups,
      @EquationBuilder
      expression: () async -> (ComputationObject<LHS1,RHS1>, ComputationObject<LHS2, RHS2>) ) async
     where LHS1: Explicit&LHSFieldExplicit, LHS2: Explicit&LHSFieldExplicit, E: GroupProtocol{
@@ -233,7 +227,7 @@ extension Solver {
 // Implicit Solver
 extension Solver {
     public func implicitSet< LHS, RHS>
-    (on nodes: Nodes,
+    (on nodes: NodesWithGroups,
      @EquationBuilder
      expression: () -> ComputationObject<LHS,RHS> )
     where E: GroupProtocol, LHS: Implicit&LHSFieldImplicit {
@@ -249,7 +243,7 @@ extension Solver {
     }
     
     public func implicitSet< LHS1, RHS1, LHS2, RHS2>
-    (on nodes: Nodes,
+    (on nodes: NodesWithGroups,
      @EquationBuilder
      expression: ()->(ComputationObject<LHS1,RHS1>, ComputationObject<LHS2,RHS2>) )
     where E: GroupProtocol, LHS1: Implicit&LHSFieldImplicit, LHS2: Implicit&LHSFieldImplicit {

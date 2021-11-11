@@ -6,50 +6,59 @@
 //
 
 
-public protocol CustomOperatorProtocol: Hashable {
-    func getCoefs<E: BaseGroupProtocol, S: BaseDomainShape>(atIndex index: Int, from domain: Domain<E,S>) -> Vec<Double>
+public protocol OperatorProtocol: Hashable {
+    func getCoefs<E,S>(atIndex index: Int, from domain: Domain<E,S>) -> Vec<Double>
+    where E: BaseGroupProtocol, S: BaseDomainShape
 }
-public enum Axis {
+
+public enum Axis: Hashable {
     case x, y
 }
-public enum SelectOp<CustomOp: CustomOperatorProtocol> {
+
+public enum SelectOp<CustomOp: OperatorProtocol>: OperatorProtocol {
     case id
     case der1(Axis)
     case der2(Axis)
     case lap
     case custom(CustomOp)
+    
+    public func getCoefs<E: BaseGroupProtocol, S: BaseDomainShape>(atIndex index: Int, from domain: Domain<E,S>) -> Vec<Double> {
+        switch self {
+        case .id:
+            let neigbours = domain.getNeigboursIndices(forIndex: index)
+            let coefs = Vec(_data: Array(repeating: 0.0, count: neigbours.count))
+            return coefs // fix!
+        case .der1:
+            let neigbours = domain.getNeigboursIndices(forIndex: index)
+            // let coefs = Vec([0, 0, 0.. node.neigbours.count ])
+            let coefs = Vec(_data: Array(repeating: 1.0, count: neigbours.count))
+            // for index in 0..<node.neigbours.count
+                //node.getStructure() // from neigbours positions
+                //coefs[index] = CoefFromStructureForDer2(Axis)
+            return coefs
+        case .der2:
+            let neigbours = domain.getNeigboursIndices(forIndex: index)
+            // let coefs = Vec([0, 0, 0.. node.neigbours.count ])
+            let coefs = Vec(_data: Array(repeating: 1.0, count: neigbours.count))
+            // for index in 0..<node.neigbours.count
+                //node.getStructure() // from neigbours positions
+                //coefs[index] = CoefFromStructureForDer2(Axis)
+            return coefs
+        case .lap:
+            return DifferentialOperator(.der2(.x)).getCoefs(atIndex: index, from: domain) + DifferentialOperator(.der2(.y)).getCoefs(atIndex: index, from: domain)
+        case .custom (let customOp):
+            return customOp.getCoefs(atIndex: index, from: domain) // no implementation here
+        }
+    }
 }
 
-public struct DifferentialOperator<CustomOp: CustomOperatorProtocol>: Hashable {
-    let type: OperatorEnum
-    let axis: Axis?
-    let custom: CustomOp?
-    var set: Set<DifferentialOperator>
+public struct DifferentialOperator<CustomOp: OperatorProtocol>: Hashable {
+    public let op: SelectOp<CustomOp>
+    public var set: Set<DifferentialOperator>
     
     public init(_ op: SelectOp<CustomOp>, subOps: Set<DifferentialOperator> = []) {
-        set = subOps
-        switch op {
-        case .id:
-            type = .id
-            axis = nil
-            custom = nil
-        case .der1(let ax):
-            type = .der1
-            axis = ax
-            custom = nil
-        case .der2(let ax):
-            type = .der2
-            axis = ax
-            custom = nil
-        case .lap:
-            type = .lap
-            axis = nil
-            custom = nil
-        case .custom(let customOp):
-            type = .custom
-            axis = nil
-            custom = customOp
-        }
+        self.set = subOps
+        self.op = op
     }
     
     public init(_ op: SelectOp<CustomOp>) where CustomOp == DefaultOp {
@@ -57,12 +66,7 @@ public struct DifferentialOperator<CustomOp: CustomOperatorProtocol>: Hashable {
         }
     
     internal func getCoefs<E, S>(atIndex index: Int, from domain: Domain<E, S>) -> Vec<Double> where E : BaseGroupProtocol, S : BaseDomainShape {
-        switch type {
-        case .custom:
-            return custom!.getCoefs(atIndex: index, from: domain)
-        default:
-            return type.getCoefs(atIndex: index, from: domain)
-        }
+        return op.getCoefs(atIndex: index, from: domain)
     }
     
     internal mutating func multiply(by op: DifferentialOperator) {
@@ -77,6 +81,7 @@ public struct DifferentialOperator<CustomOp: CustomOperatorProtocol>: Hashable {
         }
     }
 }
+
 // sugar for call site
 extension DifferentialOperator {
     public static var lap:   DifferentialOperator { .init(.lap)      }

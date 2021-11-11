@@ -4,14 +4,14 @@
 //
 //  Created by Jure Mocnik Berljavac on 03/11/2021.
 //
-public protocol Explicit {
+public protocol Explicit { // REMOVE THIS / MAKE IT MORE OBVIOUS
     func getData() async -> [Double]
 }
 
 public protocol Implicit {
     associatedtype E: BaseGroupProtocol
-    func allowOneOverwriteOfMatrixRows(forNodeArray nodeRange: [(index: Int, kind: NodeKind, group: E?, point: Point)])
-    func allowOneOverwriteOfRhsRows(forNodeArray nodeRange: [(index: Int, kind: NodeKind, group: E?, point: Point)])
+    func allowOneOverwriteOfMatrixRows(forNodeArray nodeRange: NodeArray<E>)
+    func allowOneOverwriteOfRhsRows(forNodeArray nodeRange: NodeArray<E>)
     func setRhsRow(at index: Int, to value: Double)
 }
 
@@ -31,20 +31,6 @@ public protocol LHSFieldImplicit: AnyObject, LHSField, Implicit {
 }
 
 extension Double: RHSField {
-    var coefsSet: Bool {
-        true
-    }
-    typealias GroupType = NoGroups
-    func setCoefs(nodeIndices: [Int]) {
-        
-    }
-    func setCoefs(at index: Int) {
-    }
-    
-    func getValue(at index: Int) -> Double {
-        self
-    }
-    
     public subscript(index: Int) -> Double {
         return self
     }

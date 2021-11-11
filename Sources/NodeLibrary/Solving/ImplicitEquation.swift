@@ -7,7 +7,7 @@
 
 import Foundation
 
-final class ImplicitEquation<LHS: LHSFieldImplicit, RHS: RHSField, GroupType: BaseGroupProtocol> {
+public final class ImplicitEquation<LHS: LHSFieldImplicit, RHS: RHSField, GroupType: BaseGroupProtocol> {
     private init(lhs: LHS, rhs: RHS, nodeArray: [(index: Int, kind: NodeKind, group: GroupType?, point: Point)]){
         self.lhs = lhs
         self.rhs = rhs
@@ -51,7 +51,8 @@ final class ImplicitEquation<LHS: LHSFieldImplicit, RHS: RHSField, GroupType: Ba
     }
 }
 
-struct ImplicitEquations2<LHS1: LHSFieldImplicit, LHS2: LHSFieldImplicit, RHS1: RHSField, RHS2: RHSField, GroupType: BaseGroupProtocol> {
+@usableFromInline
+internal struct ImplicitEquations2<LHS1: LHSFieldImplicit, LHS2: LHSFieldImplicit, RHS1: RHSField, RHS2: RHSField, GroupType: BaseGroupProtocol> {
     let first: ImplicitEquation<LHS1, RHS1, GroupType>
     let seccond: ImplicitEquation<LHS2, RHS2, GroupType>
     
@@ -61,6 +62,7 @@ struct ImplicitEquations2<LHS1: LHSFieldImplicit, LHS2: LHSFieldImplicit, RHS1: 
     }
     
 }
+
 extension ImplicitEquations2 where LHS1.E == GroupType, LHS2.E == GroupType {
     func updateLHSsAndRHSs() {
         first.updateLHSAndRHS()

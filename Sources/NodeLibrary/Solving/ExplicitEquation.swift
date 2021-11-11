@@ -16,11 +16,13 @@ public final class ExplicitEquation<LHS: LHSFieldExplicit, RHS: RHSField, GroupT
         self.nodeRange = nodeArray
         
     }
+    
     @usableFromInline
     internal convenience init(forNodesIn nodeArray: [(index: Int, kind: NodeKind, group: GroupType?, point: Point)], expression: ()-> ComputationObject<LHS, RHS>) {
         let object = expression()
         self.init(lhs: object.lhs, rhs: object.rhs, nodeArray: nodeArray)
     }
+    
     @inlinable
     internal func apply() async {
         await lhs.update{ protectedData in
@@ -30,6 +32,7 @@ public final class ExplicitEquation<LHS: LHSFieldExplicit, RHS: RHSField, GroupT
             }
         }
     }
+    
     @inlinable
     internal func applyParallel() async {
         await withTaskGroup(of: [(Int, Double)].self) { group in
@@ -88,7 +91,8 @@ internal struct ExplicitEquations2<LHS1: LHSFieldExplicit, RHS1: RHSField, LHS2:
     }
 
 }
-public struct ExplicitEquations3<LHS1, LHS2, LHS3, RHS1, RHS2, RHS3, GroupType: BaseGroupProtocol>: ExplicitUnion
+@usableFromInline
+internal struct ExplicitEquations3<LHS1, LHS2, LHS3, RHS1, RHS2, RHS3, GroupType: BaseGroupProtocol>: ExplicitUnion
 where LHS1: LHSFieldExplicit, LHS2: LHSFieldExplicit, LHS3: LHSFieldExplicit,
       RHS1: RHSField, RHS2: RHSField, RHS3: RHSField{
     internal let first: ExplicitEquation<LHS1, RHS1, GroupType>
@@ -110,7 +114,8 @@ where LHS1: LHSFieldExplicit, LHS2: LHSFieldExplicit, LHS3: LHSFieldExplicit,
 
     }
 }
-public struct ExplicitEquations4<LHS1, LHS2, LHS3, LHS4, RHS1, RHS2, RHS3, RHS4 ,GroupType: BaseGroupProtocol>: ExplicitUnion
+@usableFromInline
+internal struct ExplicitEquations4<LHS1, LHS2, LHS3, LHS4, RHS1, RHS2, RHS3, RHS4 ,GroupType: BaseGroupProtocol>: ExplicitUnion
 where LHS1: LHSFieldExplicit, LHS2: LHSFieldExplicit, LHS3: LHSFieldExplicit, LHS4: LHSFieldExplicit,
       RHS1: RHSField, RHS2: RHSField, RHS3: RHSField, RHS4: RHSField{
     let first: ExplicitEquation<LHS1, RHS1, GroupType>

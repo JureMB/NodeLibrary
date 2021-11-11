@@ -6,7 +6,8 @@
 //
 
 // Helper actor to protect muttable state of 'Field' classes
-public actor DataActor: ExpressibleByArrayLiteral {
+@usableFromInline
+internal actor DataActor: ExpressibleByArrayLiteral {
     private var _data: [Double]
     let count: Int
     

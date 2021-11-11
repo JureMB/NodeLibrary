@@ -29,7 +29,7 @@ public enum FillBy {
 }
 
 open class BaseFiller<S: BaseDomainShape> {
-    func fillInterior<E>(of domain: Domain<E,S>, by fillBy: FillBy) where S: Fillable{
+    func fillInterior<E>(of domain: Domain<E,S>, by fillBy: FillBy) where S: Fillable {
         fatalError("Override this method.")
     }
     

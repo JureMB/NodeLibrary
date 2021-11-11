@@ -8,8 +8,8 @@
 import Foundation
 
 public struct ComputationObject<LHS: LHSField, RHS: RHSField>{
-    let lhs: LHS
-    let rhs: RHS
+    public let lhs: LHS
+    public let rhs: RHS
     @usableFromInline
     internal init (lhs: LHS, rhs: RHS) {
         self.lhs = lhs
@@ -18,9 +18,6 @@ public struct ComputationObject<LHS: LHSField, RHS: RHSField>{
 }
 
 extension LHSField {
-//    func isEqualTo<RHS: RHSField>(rhs: ()->RHS) -> ComputationObject<Self, RHS> {
-//        return ComputationObject(lhs: self, rhs: rhs())
-//    }
     @inlinable
     public func isEqualTo<RHS: RHSField>(_ rhs: RHS) -> ComputationObject<Self, RHS> {
         return ComputationObject(lhs: self, rhs: rhs)

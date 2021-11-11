@@ -4,7 +4,7 @@
 //
 //  Created by Jure Mocnik Berljavac on 06/11/2021.
 //
-public struct OperatorField<E: BaseGroupProtocol, S: BaseDomainShape, F: FieldProtocol>: RHSField, Explicit {
+internal struct OperatorField<E: BaseGroupProtocol, S: BaseDomainShape, F: FieldProtocol>: RHSField, Explicit {
     let op: DifferentialOperator<DefaultOp>
     @usableFromInline
     internal let opInddex: Int
@@ -34,7 +34,7 @@ public struct OperatorField<E: BaseGroupProtocol, S: BaseDomainShape, F: FieldPr
     }
     
     func setCoefs() {
-        for node in _solver.all {
+        for node in _solver._all {
             setCoefs(at: node.index)
         }
     }

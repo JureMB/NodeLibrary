@@ -1,6 +1,6 @@
 public struct Vec<T: FloatingPoint> {
     var _data: [T]
-    subscript(index: Int) -> T {
+    public subscript(index: Int) -> T {
         get {
             _data[index]
         }
@@ -8,7 +8,7 @@ public struct Vec<T: FloatingPoint> {
             _data[index] = newValue
         }
     }
-    func dot(other: Vec) -> T {
+    public func dot(other: Vec) -> T {
         guard self._data.count == other._data.count else {
             fatalError()
         }
@@ -19,12 +19,12 @@ public struct Vec<T: FloatingPoint> {
         return result
     }
 }
-func +=<T: AdditiveArithmetic>(lhs: inout Vec<T>, rhs: Vec <T>) {
+public func +=<T: AdditiveArithmetic>(lhs: inout Vec<T>, rhs: Vec <T>) {
     for i in 0..<lhs._data.count {
         lhs[i] += rhs[i]
     }
 }
-func +<T: AdditiveArithmetic>(lhs: Vec<T>, rhs: Vec <T>) ->Vec<T> {
+public func +<T: AdditiveArithmetic>(lhs: Vec<T>, rhs: Vec <T>) ->Vec<T> {
     var result = Vec(_data: [T](repeating: T.zero, count: lhs._data.count))
     for i in 0..<lhs._data.count {
         result[i] = lhs[i] + rhs[i]

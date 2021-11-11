@@ -26,23 +26,26 @@ where E: BaseGroupProtocol, S: BaseDomainShape, F: FieldProtocol {
         result = solver.explicitField(field)
     }
     
-    public func implicitOperatorField(_ op: DifferentialOperator<DefaultOp>) -> ImplicitOperatorField<E,S,F>{
+    public func implicitOperatorField(_ op: DifferentialOperator<DefaultOp>) -> ImplicitOperatorField<E,S,F> {
         return ImplicitOperatorField(op: op, field: self)
     }
     
-    public func implicitOperatorField(fromExpression expression: ()->DifferentialOperator<DefaultOp>) -> ImplicitOperatorField<E,S,F>{
+    public func implicitOperatorField(fromExpression expression: () -> DifferentialOperator<DefaultOp>)
+    -> ImplicitOperatorField<E,S,F> {
         return implicitOperatorField(expression())
     }
     
-    public func callAsFunction(_ op: DifferentialOperator<DefaultOp>) -> ImplicitOperatorField<E,S,F> {
+    public func callAsFunction(_ op: DifferentialOperator<DefaultOp>)
+    -> ImplicitOperatorField<E,S,F> {
         return implicitOperatorField(op)
     }
     
-    public func callAsFunction(fromExpression expression: ()->DifferentialOperator<DefaultOp>) -> ImplicitOperatorField<E,S,F> {
+    public func callAsFunction(fromExpression expression: () -> DifferentialOperator<DefaultOp>)
+    -> ImplicitOperatorField<E,S,F> {
         return implicitOperatorField(expression())
     }
     
-    public func getResult() async -> ScalarFieldRHS<E,S,F> {
+    public func getResult() async -> some RHSField {
         await result.copy()
     }
     
@@ -89,21 +92,22 @@ extension ImplicitScalarField {
 }
 
 extension ImplicitScalarField {
-    public func allowOneOverwriteOfMatrixRows(forNodeArray nodeRange: [(index: Int, kind: NodeKind, group: E?, point: Point)]) {
+    public func allowOneOverwriteOfMatrixRows(forNodeArray nodeRange: NodeArray<E>) {
         for node in nodeRange {
             let index = node.index
             matrixIsSet[index] = false
         }
     }
     
-    public func allowOneOverwriteOfRhsRows(forNodeArray nodeRange: [(index: Int, kind: NodeKind, group: E?, point: Point)]) {
+    public func allowOneOverwriteOfRhsRows(forNodeArray nodeRange: NodeArray<E>) {
         for node in nodeRange {
             let index = node.index
             rhsIsSet[index] = false
         }
     }
     
-    public func allowOneOverwriteOfMatrixRows<Seq>(forNodes nodeRange: NodeSequence<E, Seq>) where Seq: Sequence {
+    public func allowOneOverwriteOfMatrixRows<Seq>(forNodes nodeRange: NodeSequence<E, Seq>)
+    where Seq: Sequence {
 //        #if DEBUG
         for node in nodeRange {
             let index = node.index
@@ -112,7 +116,8 @@ extension ImplicitScalarField {
 //        #endif
     }
     
-    public func allowOneOverwriteOfRhsRows<Seq>(forNodes nodeRange: NodeSequence<E,Seq>) where Seq: Sequence {
+    public func allowOneOverwriteOfRhsRows<Seq>(forNodes nodeRange: NodeSequence<E,Seq>)
+    where Seq: Sequence {
         for node in nodeRange {
             let index = node.index
             rhsIsSet[index] = false

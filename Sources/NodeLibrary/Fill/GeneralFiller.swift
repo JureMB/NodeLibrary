@@ -16,7 +16,10 @@ public class GeneralFiller<S: DomainShape>: BaseFiller<S> {
         switch fillBy {
         case .step(let step):
             print("fill step", step)
-            let domainArea: Double = (shape.bounds.xHigh - shape.bounds.xLow) * (shape.bounds.yHigh - shape.bounds.yLow)
+            
+            let domainArea: Double =
+            (shape.bounds.xHigh - shape.bounds.xLow) * (shape.bounds.yHigh - shape.bounds.yLow)
+            
             let stepArea: Double = step * step
             let N = Int(domainArea / stepArea)
             print("N = ", N)
@@ -34,7 +37,6 @@ public class GeneralFiller<S: DomainShape>: BaseFiller<S> {
             print("print dens", density)
             fatalError("DefaultFiller not implemented for density.")
         }
-        
     }
     
     override func fillBoundary<E>(of domain: Domain<E,S>,by fillBy: FillBy)  {
